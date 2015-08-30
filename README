@@ -1,3 +1,189 @@
+NOTE: Original U-Boot README content is presented by the end.
+=============================================================
+
+
+Preparing to Build:
+===================
+
+Ubuntu on PC:
+-------------
+
+sudo apt-get install gcc-arm-linux-gnueabi build-essential git lzop libssl-dev wget
+sudo apt-get device-tree-compiler
+
+Native on CatchWire/KaliTAP Appliance:
+--------------------------------------
+
+sudo apt-get install build-essential git lzop libssl-dev wget
+sudo apt-get device-tree-compiler
+
+
+Getting Sources:
+================
+
+wget https://github.com/wawtechnologies/u-boot-2014.04-catchwire-kalitap/archive/master.zip
+unzip master.zip
+
+or
+
+git clone https://github.com/wawtechnologies/u-boot-2014.04-catchwire-kalitap.git
+
+
+Building:
+=========
+
+NOTE: add "CROSS_COMPILE=arm-linux-gnueabi-" for Ubuntu PC
+-----
+
+cd u-boot-2014.04-catchwire-kalitap
+
+make ARCH=arm distclean
+make ARCH=arm catchwire_config
+make ARCH=arm
+
+As a result of successful build, the following files should appear
+in build root directory:
+
+u-boot.img
+MLO
+
+
+Contents of DOS Boot partition on SD Card:
+==========================================
+
+u-boot.img
+MLO
+uEnv.txt
+zImage
+dtbs/catchwire.dtb
+
+NOTE:  1) Take approprite file (uEnv.txt.CatchWire or uEnv.txt.KaliTAP) 
+-----     from uenv directory and rename it as uEnv.txt
+       2) catchwire.dtb file is located in dtb directory
+       3) zImage is taken from appropriate Linux kernel build
+       
+
+Building SD card image:
+=======================
+
+Prerequisites:
+--------------
+
+sudo apt-get install util-linux kpartx dosfstools e2fsprogs gddrescue
+
+Create an empty image:
+----------------------
+
+dd if=/dev/zero of=kalitap.img bs=1M count=500
+
+NOTE: count=500 will create 500M image as an example, but you probably want
+----- to have morespace, so use appropriate number here
+
+Partition the image:
+--------------------
+
+sudo sfdisk --in-order --Linux --unit M kalitap.img << EOF
+1,48,0xE,*
+,,,-
+EOF
+
+NOTE: In the above example, we create two partitions inside our image file.
+----- The first one will be the boot partition, starting at an offset of 1MiB,
+      with a size of 48MiB and partition id “W95 FAT16 (LBA)”. The second one
+      will consume all remaining space (451MiB in our example) and will have
+      the default partition id (“Linux”).
+      
+
+Format and mount the partitions:
+================================
+
+sudo kpartx -av kalitap.img
+
+Keep note of the output of the above command, in our example it was:
+
+add map loop0p1 (253:0): 0 98304  linear /dev/loop0 2048
+add map loop0p2 (253:1): 0 923648 linear /dev/loop0 100352
+
+The above command makes use of the device mapper mechanism of the
+linux kernel to create virtual block devices for the two partitions
+inside our image. Assuming that kpartx reported loop0 as the loop device name,
+our two partitions will now be available as /dev/mapper/loop0p1 and /dev/mapper/loop0p2.
+
+We can now format our partitions and mount them in temporary folders.
+We use FAT16 for the boot partition and assign the label “boot” to it,
+and EXT4 for the root partition and assign the label “rootfs” to it.
+
+sudo mkfs.vfat -F 16 /dev/mapper/loop0p1 -n boot
+sudo mkfs.ext4 /dev/mapper/loop0p2 -L rootfs
+mkdir -p tmpmnt/boot
+mkdir -p tmpmnt/rootfs
+sudo mount /dev/mapper/loop0p1 tmpmnt/boot/
+sudo mount /dev/mapper/loop0p2 tmpmnt/rootfs/
+
+Make sure that you replace the loop device names with whatever was
+reported when you executed the kpartx command.
+
+We are now ready to add files to our image.
+
+
+Adding files to image:
+======================
+
+With both our partitions mounted as virtual block devices, we can copy
+any files we like into them, using any standard file copying method,
+be it command-line or graphical.
+
+Assuming that you have the bootloader, kernel and filesystem, make sure that
+you first copy the MLO file, followed by the u-boot.img file of the bootloader
+into an empty, freshly formatted FAT16 boot partition. Create dtbs sub-directory and
+copy corresponding dtb file, and do not forget to copy zImage kernel binary as well.
+The remaining files can be copied in any order to rootfs partition.
+
+
+Finish image creation:
+======================
+
+When we are done with adding files to the image, we must make sure that all
+files have finished being copied to the image, unmount the virtual block
+devices and release them.
+
+sync
+sudo umount tmpmnt/boot/
+sudo umount tmpmnt/rootfs/
+sudo kpartx -dv kalitap.img
+
+That’s all. The image is now ready and you can use it as it is,
+or copy it to a microSD card.
+
+
+Copy image to microSD card:
+===========================
+
+To copy the image file to a microSD card, you can use the standard dd command.
+
+sudo dd if=kalitap.img of=[block_device]
+
+Alternatively, we suggest using ddrescue, which has a more verbose output.
+
+sudo ddrescue -f kalitap.img [block_device]
+
+In the above commands, replace [block_device] with the block device
+name of your microSD card (such as /dev/sdx).
+
+
+And Finally:
+============
+
+HAVE A LOT OF FUN WITH CATCHWIRE and KALITAP Appliances!!!
+
+
+
+**********************************************************
+**********************************************************
+**********************************************************
+
+
+
 #
 # (C) Copyright 2000 - 2013
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
