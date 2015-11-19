@@ -249,7 +249,10 @@ void enable_i2c0_pin_mux(void)
 void enable_board_pin_mux(struct am335x_baseboard_id *header)
 {
 	/* Do board-specific muxes. */
-	if (board_is_catchwire(header) || board_is_kalitap(header)) {
+	if (board_is_catchwire(header) ||
+            board_is_luna(header)      ||
+            board_is_kalitap(header))
+        {
                 /* CATCHWIRE Appliance pinmux */
                 configure_module_pin_mux(mmc0_pin_mux);
                 configure_module_pin_mux(uart0_pin_mux);

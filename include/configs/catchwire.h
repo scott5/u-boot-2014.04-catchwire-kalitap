@@ -157,6 +157,8 @@
                         "setenv fdtfile kalitap.dtb; setenv fdtbase kalitap.dtb; fi; " \
 		"if test $board_name = CWIRESTD; then " \
 			"setenv fdtfile catchwire.dtb; setenv fdtbase catchwire.dtb; fi; " \
+		"if test $board_name = NEWT335X; then " \
+			"setenv fdtfile catchwire.dtb; setenv fdtbase catchwire.dtb; fi; " \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree to use; fi; \0" \
 	NANDARGS \

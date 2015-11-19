@@ -148,7 +148,9 @@ void am33xx_spl_board_init(void)
 		hang();
 	}
 
-	if (!board_is_kalitap(&header) && !board_is_catchwire(&header))
+	if (!board_is_kalitap(&header) &&
+            !board_is_luna(&header)    &&
+            !board_is_catchwire(&header))
 	{
 		puts("Could not get board ID (CatchWire/KaliTAP).\n");
 		hang();
@@ -255,6 +257,8 @@ const struct dpll_params *get_dpll_ddr_params(void)
                 return &dpll_ddr_catchwire;
         else if (board_is_catchwire(&header))
                 return &dpll_ddr_catchwire;
+        else if (board_is_luna(&header))
+                return &dpll_ddr_catchwire;
 	else
 		return &dpll_ddr;
 }
@@ -291,7 +295,9 @@ void set_mux_conf_regs(void)
 		hang();
 	}
 
-	if (!board_is_kalitap(&header) && !board_is_catchwire(&header))
+	if (!board_is_kalitap(&header) &&
+            !board_is_luna(&header)    &&
+            !board_is_catchwire(&header))
         {
                 puts("Could not get board ID (CatchWire/KaliTAP).\n");
                 hang();
@@ -318,7 +324,9 @@ void sdram_init(void)
 		hang();
 	}
 
-	if (!board_is_kalitap(&header) && !board_is_catchwire(&header))
+	if (!board_is_kalitap(&header) &&
+            !board_is_luna(&header)    &&
+            !board_is_catchwire(&header))
         {
                 puts("Could not get board ID (CatchWire/KaliTAP).\n");
                 hang();
@@ -475,7 +483,10 @@ int board_eth_init(bd_t *bis)
         if (read_eeprom(&header) < 0)
                 puts("Could not get board ID.\n");
 
-	if (board_is_catchwire(&header) || board_is_kalitap(&header)) {
+	if (board_is_catchwire(&header) ||
+            board_is_luna(&header)      ||
+            board_is_kalitap(&header))
+        {
                writel((RGMII_MODE_ENABLE | RGMII_INT_DELAY), &cdev->miisel);
                cpsw_slaves[0].phy_if = cpsw_slaves[1].phy_if =
                                PHY_INTERFACE_MODE_RGMII; 

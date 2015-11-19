@@ -40,6 +40,11 @@ static inline int board_is_catchwire(struct am335x_baseboard_id *header)
         return !strncmp(header->name, "CWIRESTD", HDR_NAME_LEN);
 }
 
+static inline int board_is_luna(struct am335x_baseboard_id *header)
+{
+        return !strncmp(header->name, "NEWT335X", HDR_NAME_LEN);
+}
+
 /*
  * We have three pin mux functions that must exist.  We must be able to enable
  * uart0, for initial output and i2c0 to read the main EEPROM.  We then have a
